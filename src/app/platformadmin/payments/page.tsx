@@ -10,8 +10,6 @@ export const metadata: Metadata = buildPageMetadata({
   noIndex: true,
 });
 
-export const instant = false;
-
 export default function Page() {
   return <PlatformPayments />;
 }

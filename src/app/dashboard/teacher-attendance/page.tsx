@@ -10,9 +10,6 @@ export const metadata: Metadata = buildPageMetadata({
   noIndex: true,
 });
 
-/** Campus session is client-only, so this page is outside the logged-out shell. */
-export const instant = false;
-
 export default function Page() {
   return <TeacherAttendancePage />;
 }

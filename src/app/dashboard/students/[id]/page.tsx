@@ -10,9 +10,6 @@ export const metadata: Metadata = buildPageMetadata({
   noIndex: true,
 });
 
-/** Campus session is client-only, so this page is outside the logged-out shell. */
-export const instant = false;
-
 export default async function Page({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   return <StudentDetailPage id={id} />;
