@@ -63,9 +63,10 @@ const steps = (v0: number, ...changes: [number, number][]) => {
 };
 
 type Keys = Record<string, number[]>;
-type GProps = Partial<ComponentProps<typeof motion.g>>;
+type MotionGProps = Omit<ComponentProps<typeof motion.g>, "x" | "y" | "r" | "children">;
+type GProps = Partial<MotionGProps>;
 
-type PivotProps = ComponentProps<typeof motion.g> & { x: number; y: number; r?: number };
+type PivotProps = MotionGProps & { x: number; y: number; r?: number; children?: ReactNode };
 function Pivot({ x, y, r = 100, children, ...rest }: PivotProps) {
   return (
     <motion.g {...rest}>

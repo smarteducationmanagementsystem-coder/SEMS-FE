@@ -147,8 +147,9 @@ const cardLife: Transition = { duration: LIFE, ease: "linear", repeat: Infinity 
 
 /* ---------------- helpers ---------------- */
 type Keys = Record<string, number[]>;
+type MotionGProps = Omit<ComponentProps<typeof motion.g>, "x" | "y" | "r" | "children">;
 
-type PivotProps = ComponentProps<typeof motion.g> & { x: number; y: number; r?: number };
+type PivotProps = MotionGProps & { x: number; y: number; r?: number; children?: ReactNode };
 /** Invisible square centred on the pivot so a group rotates/scales exactly around (x, y). */
 function Pivot({ x, y, r = 120, children, ...rest }: PivotProps) {
   return (
@@ -204,7 +205,7 @@ function Leg({
   hx, hy, thigh, shin, foot, run,
 }: {
   hx: number; hy: number; thigh: number[]; shin: number[]; foot: number[];
-  run: (k: Keys) => Partial<ComponentProps<typeof motion.g>>;
+  run: (k: Keys) => Partial<MotionGProps>;
 }) {
   const kneeY = hy + 44;
   const ankleY = hy + 86;
@@ -227,7 +228,7 @@ function Arm({
   sx, sy, color, upper, fore, run,
 }: {
   sx: number; sy: number; color: string; upper: number[]; fore: number[];
-  run: (k: Keys) => Partial<ComponentProps<typeof motion.g>>;
+  run: (k: Keys) => Partial<MotionGProps>;
 }) {
   const ex = sx + 2;
   const ey = sy + 44;
@@ -252,14 +253,14 @@ export default function Motivated({
 }: Props) {
   const reduce = useReducedMotion();
 
-  const withKeys = (keys: Keys, transition: Transition): Partial<ComponentProps<typeof motion.g>> => {
+  const withKeys = (keys: Keys, transition: Transition): Partial<MotionGProps> => {
     if (reduce) return {};
     const initial = Object.fromEntries(Object.entries(keys).map(([k, v]) => [k, v[0]]));
     return { initial, animate: keys, transition };
   };
   const a = (keys: Keys) => withKeys(keys, step);
   const run = (keys: Keys) => withKeys(keys, runLoop);
-  const flicker = (delay = 0): Partial<ComponentProps<typeof motion.g>> =>
+  const flicker = (delay = 0): Partial<MotionGProps> =>
     reduce
       ? {}
       : {
