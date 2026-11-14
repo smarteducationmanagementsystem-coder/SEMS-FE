@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="Smart Education Management System">
+  <rect width="512" height="512" rx="112" fill="#171717"/>
+  <g transform="translate(96 82) scale(4)" fill="#F6F2E9">
+    <path d="M40 70Q63.400 43.500 74.600 10Q54.700 38.500 40 70Z" />
+    <path d="M40 70Q16.600 43.500 5.400 10Q25.300 38.500 40 70Z" />
+    <path d="M40 70Q55.100 41.600 60.700 10Q48.400 39.300 40 70Z" />
+    <path d="M40 70Q24.900 41.600 19.300 10Q31.600 39.300 40 70Z" />
+    <path d="M40 70Q47.900 40.500 49.500 10Q43.600 39.800 40 70Z" />
+    <path d="M40 70Q32.100 40.500 30.500 10Q36.400 39.800 40 70Z" />
+    <circle cx="40" cy="76" r="2.2" fill="#C8E65A" />
+  </g>
+</svg>
