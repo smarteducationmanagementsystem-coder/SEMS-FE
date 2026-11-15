@@ -14,6 +14,8 @@ interface ModalSheetProps {
   title: string;
   /** Hide the visual heading when the content provides its own. */
   hideTitle?: boolean;
+  /** Optional content shown at the start of the top bar, before the close button. */
+  headerContent?: ReactNode;
   placement?: SheetPlacement;
   children: ReactNode;
   className?: string;
@@ -44,7 +46,7 @@ const panelPlacementClasses: Record<SheetPlacement, string> = {
  * transition; on close the state flips back and the dialog is only closed once
  * the slide-out has finished. Page scrolling (including Lenis) is paused while open.
  */
-export function ModalSheet({ isOpen, onClose, title, hideTitle, placement = "right", children, className }: ModalSheetProps) {
+export function ModalSheet({ isOpen, onClose, title, hideTitle, headerContent, placement = "right", children, className }: ModalSheetProps) {
   const dialogRef = useRef<HTMLDialogElement>(null);
 
   useEffect(() => {
@@ -110,6 +112,7 @@ export function ModalSheet({ isOpen, onClose, title, hideTitle, placement = "rig
         )}
       >
         <div className="flex items-center justify-between gap-4 border-b border-stone/80 px-4 py-4 sm:px-6">
+          {headerContent}
           <h2 className={classNames("font-display text-2xl", hideTitle && "sr-only")}>{title}</h2>
           <button
             type="button"

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState, type PointerEvent } from "react";
 import { classNames } from "@/lib/format";
 
 const navy = "#001038";
@@ -87,18 +87,49 @@ function SupplyGraphic({ kind }: { kind: SupplyKind }) {
 export function HeroSupplies() {
   const [hovered, setHovered] = useState(false);
   const [pinned, setPinned] = useState(false);
+  const ref = useRef<HTMLButtonElement>(null);
+  const touching = useRef(false);
   const shown = hovered || pinned;
+
+  // Touch has no real hover. Only the tap decides, so a second tap puts the supplies back.
+  function onPointerEnter(event: PointerEvent<HTMLButtonElement>) {
+    touching.current = event.pointerType !== "mouse";
+    if (!touching.current) setHovered(true);
+  }
+
+  // Scrolling the phone out of view tucks the supplies back inside.
+  useEffect(() => {
+    const node = ref.current;
+    if (!node) return;
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry && !entry.isIntersecting) {
+          setPinned(false);
+          setHovered(false);
+        }
+      },
+      { threshold: 0.15 },
+    );
+    observer.observe(node);
+    return () => observer.disconnect();
+  }, []);
 
   return (
     <button
+      ref={ref}
       type="button"
       aria-pressed={shown}
       aria-label={shown ? "Hide books, pencils, and pens" : "Show books, pencils, and pens"}
-      onMouseEnter={() => setHovered(true)}
-      onMouseLeave={() => setHovered(false)}
-      onFocus={() => setHovered(true)}
+      onPointerEnter={onPointerEnter}
+      onPointerLeave={() => setHovered(false)}
+      onFocus={(event) => {
+        if (event.currentTarget.matches(":focus-visible")) setHovered(true);
+      }}
       onBlur={() => setHovered(false)}
-      onClick={() => setPinned((open) => !open)}
+      onClick={() => {
+        if (touching.current) setHovered(false);
+        setPinned((open) => !open);
+      }}
       className="group relative mx-auto block h-[440px] w-full max-w-[560px] cursor-pointer rounded-[2rem] outline-none focus-visible:ring-2 focus-visible:ring-[#0060e4] focus-visible:ring-offset-4 sm:h-[520px]"
     >
       {supplies.map((item, index) => (
