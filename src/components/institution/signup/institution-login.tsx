@@ -4,7 +4,6 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState, type FormEvent } from "react";
 import { routes } from "@/constants/routes";
-import { demoCampusPassword } from "../campus-data";
 import { useAdmin } from "../campus-state";
 import { AdminButton, AdminField, adminFieldClass } from "../shared/fields";
 import { AuthSplit } from "./auth-split";
@@ -40,7 +39,6 @@ export function InstitutionLogin() {
               <input id="login-password" type="password" required autoComplete="current-password" className={adminFieldClass} value={password} onChange={(event) => setPassword(event.target.value)} />
             </AdminField>
             <AdminButton type="submit" disabled={pending}>{pending ? "Logging in..." : "Log in"}</AdminButton>
-            <p className="text-xs text-[var(--admin-muted)]">Existing campuses, such as office@northline.edu, use the password {demoCampusPassword}.</p>
           </form>
           <p className="mt-6 border-t border-[var(--admin-line)] pt-5 text-sm text-[var(--admin-muted)]">
             New campus?{" "}

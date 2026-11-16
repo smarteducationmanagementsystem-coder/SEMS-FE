@@ -3,8 +3,6 @@
 import { usePathname } from "next/navigation";
 import { createContext, useContext, useEffect, useState, useSyncExternalStore, type ReactNode, type SetStateAction } from "react";
 import {
-  attendanceSeed,
-  classesSeed,
   currentDateValue,
   currentTimeLabel,
   isKeptDate,
@@ -15,23 +13,9 @@ import {
   type StaffDayStatus,
   type StaffPunch,
   type TimetableCell,
-  examsSeed,
-  feesSeed,
-  feeStructuresSeed,
-  inquiriesSeed,
-  institutionAccountsSeed,
-  institutionsSeed,
-  marksSeed,
-  noticesSeed,
-  sessionsSeed,
   emptyCampusLocation,
   settingsForInstitution,
-  settingsSeed,
   type CampusLocation,
-  staffSeed,
-  studentsSeed,
-  subjectsSeed,
-  teachersSeed,
   viewerScope,
   deriveFeeStatus,
   feeTotal,
@@ -84,11 +68,6 @@ interface CampusWorkspace {
   staffDayMarks: StaffDayMark[];
   settings: CampusSettings;
   access: PortalAccess;
-}
-
-interface InstitutionAccount {
-  email: string;
-  password: string;
 }
 
 interface SignUpInput {
@@ -170,7 +149,6 @@ interface AdminContextValue {
   markNoticeRead: (id: string) => void;
   markAllNoticesRead: () => void;
   institutions: Institution[];
-  saveInstitution: (institution: Institution) => void;
   timetables: SavedTimetable[];
   createTimetable: (classIds: string[]) => string;
   deleteTimetable: (id: string) => void;
@@ -220,7 +198,7 @@ function normalizeCampus(campus: CampusWorkspace): CampusWorkspace {
   return {
     ...campus,
     settings: {
-      ...settingsSeed,
+      ...settingsForInstitution({ name: "", city: "" }),
       ...campus.settings,
       logoUrl: typeof campus.settings?.logoUrl === "string" ? campus.settings.logoUrl : "",
       location1: campusLocation(campus.settings?.location1),
@@ -244,9 +222,9 @@ function blankCampus(institution: Pick<Institution, "name" | "city">, email?: st
     staff: [],
     classes: [],
     subjects: [],
-    sessions: sessionsSeed.map((item) => ({ ...item })),
+    sessions: [],
     fees: [],
-    feeStructures: feeStructuresSeed.map((item) => ({ ...item })),
+    feeStructures: [],
     attendance: [],
     exams: [],
     sittingPlans: [],
@@ -263,50 +241,15 @@ function blankCampus(institution: Pick<Institution, "name" | "city">, email?: st
   };
 }
 
-function northlineCampus(): CampusWorkspace {
-  return {
-    students: studentsSeed,
-    teachers: teachersSeed,
-    staff: staffSeed,
-    classes: classesSeed,
-    subjects: subjectsSeed,
-    sessions: sessionsSeed,
-    fees: feesSeed,
-    feeStructures: feeStructuresSeed,
-    attendance: attendanceSeed,
-    exams: examsSeed,
-    sittingPlans: [],
-    marks: marksSeed,
-    notices: noticesSeed,
-    inquiries: inquiriesSeed.map((item) => ({ ...item })),
-    hiring: [],
-    timetables: [],
-    resultSheets: [],
-    staffPunches: [],
-    staffDayMarks: [],
-    settings: settingsSeed,
-    access: defaultPortalAccess(),
-  };
-}
-
-function seedCampuses() {
-  return Object.fromEntries(institutionsSeed.map((institution) => [institution.id, institution.id === "ins-northline" ? northlineCampus() : blankCampus(institution)]));
-}
-
 const CAMPUS_STORAGE_KEY = "sems-campus-v1";
 
 interface CampusRecord {
   institutions: Institution[];
   campuses: Record<string, CampusWorkspace>;
-  accounts: Record<string, InstitutionAccount>;
 }
 
 function seedRecord(): CampusRecord {
-  return {
-    institutions: institutionsSeed,
-    campuses: seedCampuses(),
-    accounts: { ...institutionAccountsSeed },
-  };
+  return { institutions: [], campuses: {} };
 }
 
 function readableCampus(campus: CampusWorkspace): CampusWorkspace {
@@ -343,15 +286,17 @@ function readableCampus(campus: CampusWorkspace): CampusWorkspace {
 
 function normalizeRecord(value: Partial<CampusRecord> | null): CampusRecord {
   if (!value || !Array.isArray(value.institutions)) return seedRecord();
-  const campuses = Object.fromEntries(Object.entries(value.campuses ?? {}).map(([id, campus]) => [id, readableCampus(campus)]));
-  for (const institution of value.institutions) {
+  // Only institutions stored on the server are kept. Older demo and locally made campuses are dropped.
+  const institutions = value.institutions.filter((institution) => persistedInstitution(institution.id));
+  const campuses = Object.fromEntries(
+    Object.entries(value.campuses ?? {})
+      .filter(([id]) => persistedInstitution(id))
+      .map(([id, campus]) => [id, readableCampus(campus)]),
+  );
+  for (const institution of institutions) {
     if (!campuses[institution.id]) campuses[institution.id] = blankCampus(institution);
   }
-  return {
-    institutions: value.institutions,
-    campuses,
-    accounts: { ...institutionAccountsSeed, ...(value.accounts ?? {}) },
-  };
+  return { institutions, campuses };
 }
 
 const serverRecord = seedRecord();
@@ -408,13 +353,6 @@ function setInstitutions(update: SetStateAction<Institution[]>) {
   }));
 }
 
-function setAccounts(update: SetStateAction<Record<string, InstitutionAccount>>) {
-  patchRecord((current) => ({
-    ...current,
-    accounts: typeof update === "function" ? update(current.accounts) : update,
-  }));
-}
-
 const SESSION_KEY = "sems-auth-v1";
 
 interface ClientSession {
@@ -438,7 +376,7 @@ function readClientSession(): ClientSession | null {
   try {
     const raw = window.localStorage.getItem(SESSION_KEY);
     const parsed = raw ? (JSON.parse(raw) as ClientSession) : null;
-    clientSession = parsed?.institutionId ? parsed : null;
+    clientSession = parsed?.token && parsed.institutionId && persistedInstitution(parsed.institutionId) ? parsed : null;
   } catch {
     clientSession = null;
   }
@@ -626,15 +564,6 @@ function tokenFor(institutionId: string | null) {
   return current.token;
 }
 
-function localOwnerSignIn(email: string, password: string) {
-  const saved = readClientRecord();
-  const normalized = email.trim().toLowerCase();
-  const match = Object.entries(saved.accounts).find(([id, account]) => !persistedInstitution(id) && account.email.toLowerCase() === normalized && account.password === password);
-  if (!match) return "Email or password does not match an institution.";
-  writeSession({ token: null, institutionId: match[0], role: "super_admin", portalAccount: "owner", actorId: null });
-  return null;
-}
-
 export function AdminProvider({ children }: { children: ReactNode }) {
   const pathname = usePathname();
   const [queryPath, setQueryPath] = useState(pathname);
@@ -681,7 +610,7 @@ export function AdminProvider({ children }: { children: ReactNode }) {
     };
   }, [session?.token, session?.portalAccount]);
 
-  const campus = normalizeCampus((sessionId && campuses[sessionId]) || blankCampus(institutionsSeed[0]));
+  const campus = normalizeCampus((sessionId && campuses[sessionId]) || blankCampus({ name: "", city: "" }));
   const signedStudent = portalAccount === "student" ? campus.students.find((student) => student.id === actorId) : undefined;
   const signedTeacher = portalAccount === "teacher" ? campus.teachers.find((teacher) => teacher.id === actorId) : undefined;
   const signedStaff = portalAccount === "staff" ? campus.staff.find((member) => member.id === actorId) : undefined;
@@ -773,12 +702,7 @@ export function AdminProvider({ children }: { children: ReactNode }) {
         setNotice(null);
         return null;
       } catch (error) {
-        const local = localOwnerSignIn(email, password);
-        if (!local) {
-          setNotice(null);
-          return null;
-        }
-        return error instanceof ApiError ? error.message : local;
+        return error instanceof ApiError ? error.message : "Could not log in.";
       }
     },
     signInStudent: async (username, password, institutionId) => {
@@ -1012,7 +936,7 @@ export function AdminProvider({ children }: { children: ReactNode }) {
         if (className && student.className !== className) continue;
         if (campus.fees.some((fee) => fee.studentId === student.id && fee.month === month)) continue;
         const structure = campus.feeStructures.find((item) => item.className === student.className);
-        const tuition = structure?.tuition ?? 8000;
+        const tuition = structure?.tuition ?? 0;
         const other = (structure?.transport ?? 0) + (structure?.lab ?? 0);
         created.push({
           id: nextId("fee"),
@@ -1236,12 +1160,6 @@ export function AdminProvider({ children }: { children: ReactNode }) {
     markNoticeRead: (id) => updateCampus((current) => ({ ...current, notices: current.notices.map((item) => (item.id === id ? { ...item, read: true } : item)) })),
     markAllNoticesRead: () => updateCampus((current) => ({ ...current, notices: current.notices.map((item) => ({ ...item, read: true })) })),
     institutions,
-    saveInstitution: (institution) => {
-      setInstitutions((current) => (current.some((item) => item.id === institution.id) ? current.map((item) => (item.id === institution.id ? institution : item)) : [institution, ...current]));
-      setCampuses((current) => (current[institution.id] ? current : { ...current, [institution.id]: blankCampus(institution) }));
-      setAccounts((current) => (current[institution.id] ? current : { ...current, [institution.id]: { email: settingsForInstitution(institution).email, password: "campus123" } }));
-      flash("Institution saved.");
-    },
     timetables: campus.timetables,
     createTimetable: (classIds) => {
       const id = nextId("tt");
@@ -1484,39 +1402,6 @@ export function AdminProvider({ children }: { children: ReactNode }) {
   };
 
   return <AdminContext.Provider value={value}>{children}</AdminContext.Provider>;
-}
-
-export interface CampusDirectoryEntry {
-  institution: Institution;
-  email: string;
-  ownerName: string;
-  phone: string;
-  address: string;
-  session: string;
-  students: Student[];
-  teachers: Teacher[];
-  staff: StaffMember[];
-  classCount: number;
-}
-
-/** Every registered campus, with the people actually stored on that campus. */
-export function useCampusDirectory(): CampusDirectoryEntry[] {
-  const { institutions, campuses, accounts } = useCampusRecord();
-  return institutions.map((institution) => {
-    const campus = campuses[institution.id];
-    return {
-      institution,
-      email: accounts[institution.id]?.email ?? campus?.settings?.email ?? "",
-      ownerName: campus?.settings?.ownerName ?? "",
-      phone: campus?.settings?.phone ?? "",
-      address: campus?.settings?.address ?? "",
-      session: campus?.settings?.session ?? "",
-      students: campus?.students ?? [],
-      teachers: campus?.teachers ?? [],
-      staff: campus?.staff ?? [],
-      classCount: campus?.classes?.length ?? 0,
-    };
-  });
 }
 
 export function useAdmin() {

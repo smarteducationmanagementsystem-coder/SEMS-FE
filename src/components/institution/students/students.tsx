@@ -279,7 +279,7 @@ export function StudentsPage() {
       </AdminModal>
 
       <AdminModal open={Boolean(confirmId)} title="Remove student" onClose={() => setConfirmId(null)}>
-        <p className="text-sm text-[var(--admin-muted)]">This removes the admission from the demo register. Fee and attendance history already recorded stays in those modules.</p>
+        <p className="text-sm text-[var(--admin-muted)]">This removes the admission from the register. Fee and attendance history already recorded stays in those modules.</p>
         <div className="mt-4 flex justify-end gap-2">
           <button type="button" onClick={() => setConfirmId(null)} className="rounded-xl px-4 py-2 text-sm">
             Cancel
