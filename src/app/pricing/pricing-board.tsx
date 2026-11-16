@@ -2,22 +2,12 @@
 
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
-import { plans as fallbackPlans } from "@/config/platform";
-import { ApiError } from "@/lib/sems-api";
 import { loadPublicPricing, type PricingPayment, type PricingPlan } from "@/lib/platformadmin-api";
 
-const fallback: PricingPlan[] = fallbackPlans.map((plan) => ({
-  name: plan.name,
-  audience: plan.audience,
-  price: plan.price,
-  period: plan.period,
-  points: [...plan.points],
-  featured: plan.featured,
-  buttonLabel: "Get started",
-}));
-
+/** Cards come only from what the platform admin saved. Nothing is hard-coded here. */
 export function PricingBoard() {
-  const [plans, setPlans] = useState<PricingPlan[]>(fallback);
+  const [plans, setPlans] = useState<PricingPlan[]>([]);
+  const [status, setStatus] = useState<"loading" | "ready" | "failed">("loading");
   const [payment, setPayment] = useState<PricingPayment>({ accountName: "", accountNumber: "", detail: "" });
   const [open, setOpen] = useState<PricingPlan | null>(null);
 
@@ -28,10 +18,10 @@ export function PricingBoard() {
         if (!active) return;
         setPlans(next.plans);
         setPayment(next.payment);
+        setStatus("ready");
       })
-      .catch((reason: unknown) => {
-        if (!active) return;
-        if (!(reason instanceof ApiError)) return;
+      .catch(() => {
+        if (active) setStatus("failed");
       });
     return () => {
       active = false;
@@ -48,6 +38,14 @@ export function PricingBoard() {
   }, [open]);
 
   const hasPayment = Boolean(payment.accountName || payment.accountNumber || payment.detail);
+
+  if (plans.length === 0) {
+    return (
+      <p className="mt-12 text-muted">
+        {status === "loading" ? "Loading prices…" : status === "failed" ? "Prices could not be loaded right now. Please try again shortly." : "Prices have not been published yet."}
+      </p>
+    );
+  }
 
   return (
     <>

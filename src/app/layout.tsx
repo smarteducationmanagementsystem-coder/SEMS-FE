@@ -69,7 +69,7 @@ export const viewport: Viewport = {
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
-    <html lang={siteConfig.language} className={`${bricolageGrotesque.variable} ${geist.variable} ${jetbrainsMono.variable} antialiased`}>
+    <html lang={siteConfig.language} suppressHydrationWarning className={`${bricolageGrotesque.variable} ${geist.variable} ${jetbrainsMono.variable} antialiased`}>
       <body className="flex min-h-dvh w-full min-w-0 flex-col overflow-x-clip">
         <script id="sems-site-theme">{siteThemeBootScript()}</script>
         <SiteThemeProvider>

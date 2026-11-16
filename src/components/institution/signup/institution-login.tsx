@@ -29,7 +29,7 @@ export function InstitutionLogin() {
   }
 
   return (
-    <AuthSplit imageSrc="/image1.jpeg" imageAlt="Three students holding books in front of a classroom board" imageSide="left">
+    <AuthSplit imageSrc="/image1.jpeg" imageAlt="Three students holding books in front of a classroom board" imageSide="left" imageKind="login">
           <h1 className="text-xl font-semibold">Login</h1>
           <p className="mt-1 text-sm text-[var(--admin-muted)]">Sign in with the email for your institution. You will land on that campus dashboard.</p>
           <form className="mt-5 grid gap-3" onSubmit={handleSubmit}>

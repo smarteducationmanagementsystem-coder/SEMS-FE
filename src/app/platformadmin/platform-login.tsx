@@ -31,7 +31,7 @@ export function PlatformLogin() {
   if (signedIn) return null;
 
   return (
-    <AuthSplit imageSrc="/image1.jpeg" imageAlt="Students in a classroom" imageSide="left">
+    <AuthSplit imageSrc="/image1.jpeg" imageAlt="Students in a classroom" imageSide="left" imageKind="login">
       <h1 className="text-xl font-semibold">Platform admin</h1>
       <p className="mt-1 text-sm text-[var(--admin-muted)]">Sign in to manage every registered institution.</p>
       <form className="mt-5 grid gap-3" onSubmit={handleSubmit}>

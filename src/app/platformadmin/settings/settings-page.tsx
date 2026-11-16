@@ -5,6 +5,7 @@ import { AdminButton, AdminField, adminFieldClass } from "@/components/instituti
 import { ApiError } from "@/lib/sems-api";
 import { loadPlatformAccount, loadPublicContactPage, loadPublicFooter, savePlatformAccount, savePlatformContactPage, savePlatformFooter, type PlatformContactPage, type PlatformFooter } from "@/lib/platformadmin-api";
 import { usePlatformAdminToken } from "../session";
+import { LandingImages } from "./landing-images";
 
 const emptyFooter: PlatformFooter = {
   blurb: "",
@@ -30,7 +31,7 @@ const emptyContact: Omit<PlatformContactPage, "placeholder"> = {
 
 export function PlatformSettings() {
   const token = usePlatformAdminToken();
-  const [tab, setTab] = useState<"account" | "footer" | "contact">("account");
+  const [tab, setTab] = useState<"account" | "footer" | "contact" | "landing">("account");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -172,7 +173,7 @@ export function PlatformSettings() {
       <div>
         <p className="text-[11px] font-semibold tracking-[0.16em] text-[var(--admin-muted)] uppercase">Account</p>
         <h1 className="mt-1 text-2xl font-semibold tracking-tight break-words">Setting</h1>
-        <p className="mt-1 max-w-2xl text-sm text-[var(--admin-muted)]">Update the platform admin sign-in, the public footer, or the contact page.</p>
+        <p className="mt-1 max-w-2xl text-sm text-[var(--admin-muted)]">Update the platform admin sign-in, the public footer, the contact page, or the landing images.</p>
       </div>
       <div className="flex flex-wrap gap-2" role="tablist" aria-label="Settings">
         {(
@@ -180,6 +181,7 @@ export function PlatformSettings() {
             ["account", "Account"],
             ["footer", "Footer"],
             ["contact", "Contact"],
+            ["landing", "Landing"],
           ] as const
         ).map(([id, label]) => (
           <button
@@ -194,7 +196,9 @@ export function PlatformSettings() {
           </button>
         ))}
       </div>
-      {tab === "contact" ? (
+      {tab === "landing" ? (
+        <LandingImages token={token} />
+      ) : tab === "contact" ? (
         <form className="grid max-w-xl gap-3 rounded-xl bg-[var(--admin-surface)] p-4 ring-1 ring-[var(--admin-line)]" onSubmit={saveContact}>
           <p className="text-sm text-[var(--admin-muted)]">These details appear in the card on the public Contact page.</p>
           <AdminField id="contact-email" label="Email">

@@ -33,7 +33,7 @@ export function InstitutionSignup() {
   }
 
   return (
-    <AuthSplit imageSrc="/image2.jpeg" imageAlt="A teacher and students with books in a classroom" imageSide="right">
+    <AuthSplit imageSrc="/image2.jpeg" imageAlt="A teacher and students with books in a classroom" imageSide="right" imageKind="signup">
           <h1 className="text-xl font-semibold">Institution signup</h1>
           <p className="mt-1 text-sm text-[var(--admin-muted)]">The owner name is this campus Super Admin. The institution name is the account students, teachers, staff, attendance, fees, exams, results, and reports open inside.</p>
           <form className="mt-5 grid gap-3" onSubmit={handleSignUp}>

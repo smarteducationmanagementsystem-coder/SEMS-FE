@@ -32,16 +32,16 @@ export const siteThemeVars: Record<SiteTheme, Record<string, string>> = {
   },
 };
 
-const appPaths = ["/dashboard", "/signup", "/login", "/student-login", "/teacher-login", "/platformadmin"];
+const appPaths = ["/dashboard/", "/platformadmin/"];
 
-/** Dashboards and sign-in screens keep the saved theme. The public site stays light. */
+/** Dashboards keep the saved theme. The public site and every sign-in or signup screen stay light. */
 export function isAppPath(pathname: string) {
-  return appPaths.some((path) => pathname === path || pathname.startsWith(`${path}/`));
+  return pathname === "/dashboard" || appPaths.some((path) => pathname.startsWith(path));
 }
 
 /** Runs before paint so a saved dark theme does not flash cream on a dashboard. */
 export function siteThemeBootScript() {
   const dark = JSON.stringify(siteThemeVars.dark);
   const paths = JSON.stringify(appPaths);
-  return `try{var p=location.pathname;var a=${paths};var app=false;for(var i=0;i<a.length;i++){if(p===a[i]||p.indexOf(a[i]+"/")===0)app=true;}if(app&&localStorage.getItem(${JSON.stringify(siteThemeKey)})==="dark"){var r=document.documentElement;var v=${dark};for(var k in v)r.style.setProperty(k,v[k]);r.style.colorScheme="dark";}}catch(e){}`;
+  return `try{var p=location.pathname;var a=${paths};var app=p==="/dashboard";for(var i=0;i<a.length;i++){if(p.indexOf(a[i])===0)app=true;}if(app&&localStorage.getItem(${JSON.stringify(siteThemeKey)})==="dark"){var r=document.documentElement;var v=${dark};for(var k in v)r.style.setProperty(k,v[k]);r.style.colorScheme="dark";}}catch(e){}`;
 }

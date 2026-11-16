@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
-import Image from "next/image";
 import LampReveal from "@/components/animation/LampReveal";
+import { LandingImage } from "@/components/landing-image";
 import { StatsRipple } from "@/components/home/stats-ripple";
 import { platformStats } from "@/config/platform";
 import { buildPageMetadata } from "@/config/seo";
@@ -31,8 +31,9 @@ export default function AboutPage() {
           <div className="relative mx-auto size-52 sm:size-60">
             <div className="absolute -inset-3 rounded-full bg-[#d7ecff] blur-md" aria-hidden="true" />
             <div className="relative size-full overflow-hidden rounded-full ring-[6px] ring-[#d3e8fb] ring-offset-4 ring-offset-ivory">
-              <Image
-                src="/zarii.jpeg"
+              <LandingImage
+                field="aboutImage"
+                fallbackSrc="/zarii.jpeg"
                 alt="Zarkhman Rasheed"
                 fill
                 sizes="240px"

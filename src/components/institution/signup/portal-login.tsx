@@ -93,6 +93,7 @@ export function PortalLogin({ kind }: { kind: "student" | "teacher" }) {
       imageSrc={student ? "/image1.jpeg" : "/image2.jpeg"}
       imageAlt={student ? "Three students holding books in front of a classroom board" : "A teacher and students with books in a classroom"}
       imageSide="left"
+      imageKind="login"
     >
       <h1 className="text-xl font-semibold">{student ? "Student portal" : "Teacher login"}</h1>
       <p className="mt-1 text-sm text-[var(--admin-muted)]">

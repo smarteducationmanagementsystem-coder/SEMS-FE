@@ -25,8 +25,10 @@ export function PlatformPricingPage() {
     loadPublicPricing()
       .then((next) => {
         if (!active) return;
-        setDraft(next);
-        setPointsText(next.plans.map((plan) => plan.points.join("\n")));
+        // Nothing saved yet: keep the three empty cards so they can be filled in.
+        const loaded = next.plans.length === 3 ? next : { ...next, plans: blankPricing().plans };
+        setDraft(loaded);
+        setPointsText(loaded.plans.map((plan) => plan.points.join("\n")));
       })
       .catch((reason: unknown) => {
         if (active) setError(reason instanceof ApiError ? reason.message : "Could not load pricing.");

@@ -113,6 +113,11 @@ export async function saveInstitutionSettings(token: string, body: Omit<CampusPr
   return result.data;
 }
 
+export async function saveInstitutionCredentials(token: string, body: { email: string; password: string; currentPassword: string }) {
+  const result = await request<DataResponse<{ email: string }>>("/institution/credentials", { method: "PUT", token, body });
+  return result.data;
+}
+
 export async function uploadInstitutionLogo(token: string, file: File) {
   const body = new FormData();
   body.append("logo", file);

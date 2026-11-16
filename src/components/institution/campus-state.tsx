@@ -58,7 +58,7 @@ import {
   type Teacher,
 } from "./campus-data";
 import { routes } from "@/constants/routes";
-import { ApiError, createStudentQuery, currentAccount, deleteClassRecord, deleteHiringRecord, deleteInstitutionLogo, deleteResultSheetRecord, deleteStaffRecord, deleteStudentRecord, deleteSubjectRecord, deleteTeacherRecord, isPersistedId, listAttendance, loadCatalog, loadDirectory, loadLedger, loginInstitution, loginStudent, loginTeacher, markStudentQueryRead, readDeviceLocation, saveAttendanceRecords, saveClassRecord, saveFeeRecords, saveHiringRecord, saveInstitutionSettings, savePermissions, saveResultSheetRecord, saveStaffPunch, saveStaffRecord, saveStaffStatus, saveStudentRecord, saveSubjectRecord, saveTeacherRecord, signupInstitution, uploadInstitutionLogo, type AccountRole, type AuthInstitution, type AuthResult } from "@/lib/sems-api";
+import { ApiError, createStudentQuery, currentAccount, deleteClassRecord, deleteHiringRecord, deleteInstitutionLogo, deleteResultSheetRecord, deleteStaffRecord, deleteStudentRecord, deleteSubjectRecord, deleteTeacherRecord, isPersistedId, listAttendance, loadCatalog, loadDirectory, loadLedger, loginInstitution, loginStudent, loginTeacher, markStudentQueryRead, readDeviceLocation, saveAttendanceRecords, saveClassRecord, saveFeeRecords, saveHiringRecord, saveInstitutionCredentials, saveInstitutionSettings, savePermissions, saveResultSheetRecord, saveStaffPunch, saveStaffRecord, saveStaffStatus, saveStudentRecord, saveSubjectRecord, saveTeacherRecord, signupInstitution, uploadInstitutionLogo, type AccountRole, type AuthInstitution, type AuthResult } from "@/lib/sems-api";
 import { defaultPortalAccess, navForRole, type PortalAccess } from "./campus-nav";
 import type { AdminTheme } from "./campus-theme";
 
@@ -194,6 +194,7 @@ interface AdminContextValue {
   saveSettings: () => Promise<string | null>;
   uploadLogo: (file: File) => Promise<string | null>;
   removeLogo: () => Promise<string | null>;
+  saveCredentials: (input: { email: string; password: string; currentPassword: string }) => Promise<string | null>;
   access: PortalAccess;
   setPageAccess: (who: keyof PortalAccess, href: string, allowed: boolean) => void;
   saveAccess: (next: PortalAccess) => Promise<string | null>;
@@ -1441,6 +1442,18 @@ export function AdminProvider({ children }: { children: ReactNode }) {
         return null;
       } catch (error) {
         return error instanceof ApiError ? error.message : "Could not remove the logo.";
+      }
+    },
+    saveCredentials: async (input) => {
+      const token = tokenFor(sessionId);
+      if (!token) return "Log in as the institution owner to change the sign-in details.";
+      try {
+        const saved = await saveInstitutionCredentials(token, input);
+        updateCampus((current) => ({ ...current, settings: { ...current.settings, email: saved.email } }));
+        flash("Sign-in details updated.");
+        return null;
+      } catch (error) {
+        return error instanceof ApiError ? error.message : "Could not update the sign-in details.";
       }
     },
     access: campus.access,

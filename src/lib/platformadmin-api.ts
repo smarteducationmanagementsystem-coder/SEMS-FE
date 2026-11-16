@@ -269,6 +269,43 @@ export async function loadContactMessages(token: string) {
   return result.data;
 }
 
+export type LandingSlot = "signupimage" | "loginimage" | "logoimage" | "aboutimage";
+
+export interface PlatformLanding {
+  signupImage: string;
+  loginImage: string;
+  logoImage: string;
+  aboutImage: string;
+}
+
+export async function loadPublicLanding() {
+  const result = await request<{ data: PlatformLanding }>("/landing");
+  return result.data;
+}
+
+export async function uploadPlatformLandingImage(token: string, slot: LandingSlot, file: File) {
+  const body = new FormData();
+  body.append("image", file);
+  let response: Response;
+  try {
+    response = await fetch(`${API_BASE}/api/platformadmin/landing/${slot}`, {
+      method: "PUT",
+      headers: { Authorization: `Bearer ${token}` },
+      body,
+    });
+  } catch {
+    throw new ApiError("Could not reach the server.");
+  }
+  const payload = (await response.json().catch(() => ({}))) as { message?: string; data?: PlatformLanding };
+  if (!response.ok || !payload.data) throw new ApiError(payload.message || "Could not upload the image.");
+  return payload.data;
+}
+
+export async function removePlatformLandingImage(token: string, slot: LandingSlot) {
+  const result = await request<{ data: PlatformLanding }>(`/landing/${slot}`, { method: "DELETE", token });
+  return result.data;
+}
+
 export async function sendPlatformEmail(token: string, body: { subject: string; type: string; institutionId: string; message: string }) {
   const result = await request<{ data: PlatformEmailResult }>("/email", { method: "POST", token, body });
   return result.data;

@@ -47,33 +47,6 @@ export const benefits = [
   { title: "Ready for a real backend", body: "Screens read from a single data layer, so an API can replace the demo records later without a redesign." },
 ] as const;
 
-export const plans = [
-  {
-    name: "Basic",
-    price: "Rs. 12,000",
-    period: "per month",
-    audience: "Single-campus academies",
-    points: ["Up to 400 students", "Attendance and fee slips", "One institution admin", "Email support"],
-    featured: false,
-  },
-  {
-    name: "Professional",
-    price: "Rs. 28,000",
-    period: "per month",
-    audience: "Schools and colleges",
-    points: ["Up to 2,000 students", "Exams, results, and reports", "Teacher and accountant roles", "Parent and student portals"],
-    featured: true,
-  },
-  {
-    name: "Enterprise",
-    price: "Custom",
-    period: "annual agreement",
-    audience: "Groups and school systems",
-    points: ["Multiple institutions", "Super admin controls", "Dedicated onboarding", "Priority support"],
-    featured: false,
-  },
-] as const;
-
 export const platformFaqs = [
   {
     question: "Who is Smart Education Management System for?",

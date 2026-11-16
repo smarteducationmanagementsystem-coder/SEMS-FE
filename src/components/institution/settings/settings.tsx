@@ -1,13 +1,104 @@
 "use client";
 
-import { useState, type ChangeEvent, type FormEvent } from "react";
+import { useState, type ChangeEvent, type FormEvent, type ReactNode } from "react";
 import { Settings } from "lucide-react";
 import { displayLogo, emptyCampusLocation, type CampusLocation } from "../campus-data";
 import { readDeviceLocation } from "@/lib/sems-api";
 import { useAdmin } from "../campus-state";
 import { AdminButton, AdminField, AdminPageIntro, AdminPanel, adminFieldClass } from "../shared/fields";
 
+type SettingsTab = "profile" | "authentication";
+
 export function SettingsPage() {
+  const [tab, setTab] = useState<SettingsTab>("profile");
+  const tabs = (
+    <div className="mb-4 flex flex-wrap gap-2" role="tablist" aria-label="Settings">
+      {(
+        [
+          ["profile", "Profile"],
+          ["authentication", "Authentication"],
+        ] as const
+      ).map(([id, label]) => (
+        <button
+          key={id}
+          type="button"
+          role="tab"
+          aria-selected={tab === id}
+          onClick={() => setTab(id)}
+          className={tab === id ? "rounded-lg bg-[var(--admin-accent)] px-4 py-2 text-sm font-semibold text-white" : "rounded-lg px-4 py-2 text-sm font-semibold ring-1 ring-[var(--admin-line)]"}
+        >
+          {label}
+        </button>
+      ))}
+    </div>
+  );
+  return tab === "authentication" ? <AuthenticationSettings tabs={tabs} /> : <ProfileSettings tabs={tabs} />;
+}
+
+function AuthenticationSettings({ tabs }: { tabs: ReactNode }) {
+  const { settings, saveCredentials } = useAdmin();
+  const [draftEmail, setDraftEmail] = useState<string | null>(null);
+  const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [currentPassword, setCurrentPassword] = useState("");
+  const [error, setError] = useState("");
+  const [notice, setNotice] = useState("");
+  const [busy, setBusy] = useState(false);
+  const email = draftEmail ?? settings.email;
+
+  async function submit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    setNotice("");
+    if (password !== confirmPassword) {
+      setError("The new password and confirmation do not match.");
+      return;
+    }
+    setBusy(true);
+    setError("");
+    const failure = await saveCredentials({ email, password, currentPassword });
+    setBusy(false);
+    if (failure) {
+      setError(failure);
+      return;
+    }
+    setDraftEmail(null);
+    setPassword("");
+    setConfirmPassword("");
+    setCurrentPassword("");
+    setNotice("Sign-in details updated. Use this email and password the next time you log in.");
+  }
+
+  return (
+    <div className="grid gap-4">
+      <AdminPageIntro icon={Settings} eyebrow="Campus" title="Settings" description="Change the email and password this institution uses to sign in." />
+      {tabs}
+      <form onSubmit={submit} className="grid max-w-xl gap-3 rounded-xl bg-[var(--admin-surface)] p-4 text-[var(--admin-text)] shadow-sm ring-1 ring-[var(--admin-line)] sm:p-5">
+        <p className="text-sm text-[var(--admin-muted)]">These details sign in the owner of this institution only. Teachers, staff, and students keep their own logins.</p>
+        <AdminField id="auth-email" label="Email">
+          <input id="auth-email" type="email" required autoComplete="username" className={adminFieldClass} value={email} onChange={(event) => setDraftEmail(event.target.value)} />
+        </AdminField>
+        <AdminField id="auth-password" label="New password">
+          <input id="auth-password" type="password" autoComplete="new-password" minLength={4} maxLength={72} className={adminFieldClass} value={password} placeholder="Leave blank to keep the current password" onChange={(event) => setPassword(event.target.value)} />
+        </AdminField>
+        <AdminField id="auth-confirm" label="Confirm new password">
+          <input id="auth-confirm" type="password" autoComplete="new-password" className={adminFieldClass} value={confirmPassword} onChange={(event) => setConfirmPassword(event.target.value)} />
+        </AdminField>
+        <AdminField id="auth-current" label="Current password">
+          <input id="auth-current" type="password" required autoComplete="current-password" className={adminFieldClass} value={currentPassword} onChange={(event) => setCurrentPassword(event.target.value)} />
+        </AdminField>
+        {notice ? <p className="text-sm text-[#1f7a45]">{notice}</p> : null}
+        {error ? <p className="text-sm text-[#a3361f]">{error}</p> : null}
+        <div>
+          <AdminButton type="submit" disabled={busy}>
+            {busy ? "Saving…" : "Save sign-in details"}
+          </AdminButton>
+        </div>
+      </form>
+    </div>
+  );
+}
+
+function ProfileSettings({ tabs }: { tabs: ReactNode }) {
   const { settings, updateSettings, saveSettings, uploadLogo, removeLogo } = useAdmin();
   const [logoError, setLogoError] = useState<string | null>(null);
   const [formError, setFormError] = useState<string | null>(null);
@@ -81,6 +172,7 @@ export function SettingsPage() {
           </div>
         }
       />
+      {tabs}
       <AdminPanel>
         <h2 className="mb-4 font-semibold">Institution profile</h2>
         <div className="mb-4 flex items-center gap-4">
@@ -124,7 +216,10 @@ export function SettingsPage() {
           <LocationField id="location2" label="Location 2" value={location2} capturing={capturing === "location2"} onLabel={(label) => setLocationLabel("location2", label)} onCapture={() => captureLocation("location2")} onClear={() => updateSettings({ location2: { ...emptyCampusLocation } })} />
           <AdminField id="owner" label="Owner name"><input id="owner" className={adminFieldClass} value={settings.ownerName} onChange={(event) => updateSettings({ ownerName: event.target.value })} /></AdminField>
           <AdminField id="name" label="Institution name"><input id="name" className={adminFieldClass} value={settings.institutionName} onChange={(event) => updateSettings({ institutionName: event.target.value })} /></AdminField>
-          <AdminField id="email" label="Email"><input id="email" type="email" className={adminFieldClass} value={settings.email} onChange={(event) => updateSettings({ email: event.target.value })} /></AdminField>
+          <AdminField id="email" label="Email">
+            <input id="email" type="email" readOnly className={adminFieldClass} value={settings.email} />
+            <p className="mt-1 text-xs text-[var(--admin-muted)]">Change the sign-in email in the Authentication tab.</p>
+          </AdminField>
           <AdminField id="phone" label="Phone"><input id="phone" className={adminFieldClass} value={settings.phone} onChange={(event) => updateSettings({ phone: event.target.value })} /></AdminField>
           <AdminField id="city" label="City"><input id="city" className={adminFieldClass} value={settings.city} onChange={(event) => updateSettings({ city: event.target.value })} /></AdminField>
           <AdminField id="address" label="Address"><input id="address" className={adminFieldClass} value={settings.address} onChange={(event) => updateSettings({ address: event.target.value })} /></AdminField>
