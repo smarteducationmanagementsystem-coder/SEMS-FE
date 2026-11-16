@@ -50,7 +50,7 @@ export function downloadA4Portrait(title: string, bodyHtml: string, extraCss = "
     body { margin: 0; color: #111; font-family: Arial, Helvetica, sans-serif; }
     .page { height: 281mm; display: flex; flex-direction: column; page-break-after: always; }
     .page:last-child { page-break-after: auto; }
-    .slip { flex: 1 1 0; min-height: 0; display: grid; grid-template-columns: 1fr 14px 1fr; border-bottom: 1px dashed #9ca3af; overflow: hidden; }
+    .slip { flex: 0 0 70.25mm; height: 70.25mm; min-height: 0; display: grid; grid-template-columns: 1fr 14px 1fr; border-bottom: 1px dashed #9ca3af; overflow: hidden; }
     .slip:last-child { border-bottom: 0; }
     .copy { display: flex; flex-direction: column; height: 100%; padding: 2.5mm 3mm 2mm; overflow: hidden; }
     .cut { position: relative; background-image: repeating-linear-gradient(to bottom, transparent, transparent 4px, #111 4px, #111 6px); }
